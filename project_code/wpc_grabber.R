@@ -1,4 +1,4 @@
-wpc_grab <- function(country="all", year=2021, gender="both", ages="all", poverty_line = 1.9){
+wpc_grab <- function(country="all", year=2021, type="ages", gender="both", region="urban", ages="all", poverty_line = 1.9){
   require("data.table")
   country <- paste0(country, collapse=",")
   year <- paste0(year, collapse=",")
@@ -10,8 +10,14 @@ wpc_grab <- function(country="all", year=2021, gender="both", ages="all", povert
   ncountries <- nchar(country)-nchar(gsub(",","",country))+1
   nyears <- nchar(year)-nchar(gsub(",","",year))+1
   
+  if(type == "ages") url <- paste0("https://api.worldpoverty.io/LB0Bq1Tq3HWjL3F5ycnf2IEqxILfUStr/ages/", country, "/", year, "/[", ages ,")/", gender, "/", poverty_line, "?format=binary&include_escape_rates=true")
+  if(type == "regions"){
+    country <- gsub("WORLD,|KSV,|KWT,", "", country) #For some reason these two countries and 'WORLD' can't be rendered for urban/rural
+    ncountries <- nchar(country)-nchar(gsub(",","",country))+1
+    url <- paste0("https://api.worldpoverty.io/LB0Bq1Tq3HWjL3F5ycnf2IEqxILfUStr/regions/", country, "/", year, "/", region, "/", poverty_line, "?format=binary&include_escape_rates=true")
+  }
   #Public key API download
-  url <- paste0("https://api.worldpoverty.io/LB0Bq1Tq3HWjL3F5ycnf2IEqxILfUStr/ages/",country, "/", year, "/[", ages ,")/", gender, "/" ,poverty_line, "?format=binary&include_escape_rates=true")
+  
   to.read <- file(url, "rb")
   bytes <- readBin(to.read, integer(), n=1000000, size=1, signed=F)
   close.connection(to.read)
@@ -89,3 +95,15 @@ wpc_grab <- function(country="all", year=2021, gender="both", ages="all", povert
   return(allout)
 }
 
+urban <- wpc_grab(type = "regions", region = "urban", year = seq(2000,2032)) #Region estimates run 2000-2032
+rural <- wpc_grab(type = "regions", region = "rural", year = seq(2000,2032))
+females <- wpc_grab(type = "ages", gender = "female", year = seq(2011,2031)) #Gender estimates run 2011-2031
+males <- wpc_grab(type = "ages", gender = "male", year = seq(2011,2031))
+
+urban$subset <- "urban"
+rural$subset <- "rural"
+females$subset <- "females"
+males$subset <- "males"
+
+all <- rbind(urban,rural,females,males)
+fwrite(all, "all_wpc.csv")
