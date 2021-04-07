@@ -1,14 +1,17 @@
-wpc_grab <- function(country="all", year=2020){
+wpc_grab <- function(country="all", year=2021, gender="both", ages="all", poverty_line = 1.9){
+  require("data.table")
   country <- paste0(country, collapse=",")
   year <- paste0(year, collapse=",")
   isos <- c("WORLD,AFG,ALB,DZA,AGO,ARG,ARM,AUS,AUT,AZE,BHS,BHR,BGD,BRB,BLR,BEL,BLZ,BEN,BTN,BOL,BIH,BWA,BRA,BRN,BGR,BFA,BDI,KHM,CMR,CAN,CPV,CAF,TCD,CHL,CHN,COL,COM,COG,COD,CRI,CIV,HRV,CUB,CYP,CZE,DNK,DJI,DOM,ECU,EGY,SLV,GNQ,ERI,EST,ETH,FJI,FIN,FRA,GAB,GMB,GEO,DEU,GHA,GRC,GTM,GIN,GNB,GUY,HTI,HND,HKG,HUN,ISL,IND,IDN,IRN,IRQ,IRL,ISR,ITA,JAM,JPN,JOR,KAZ,KEN,KSV,KWT,KGZ,LAO,LVA,LBN,LSO,LBR,LBY,LTU,LUX,MAC,MKD,MDG,MWI,MYS,MDV,MLI,MLT,MRT,MUS,MEX,MDA,MNG,MNE,MAR,MOZ,MMR,NAM,NPL,NLD,NZL,NIC,NER,NGA,PRK,NOR,OMN,PAK,PSE,PAN,PNG,PRY,PER,PHL,POL,PRT,PRI,QAT,ROU,RUS,RWA,LCA,VCT,WSM,STP,SAU,SEN,SRB,SLE,SGP,SVK,SVN,SLB,SOM,ZAF,KOR,SSD,ESP,LKA,SDN,SUR,SWZ,SWE,CHE,TWN,TJK,TZA,THA,TLS,TGO,TON,TTO,TUN,TUR,TKM,UGA,UKR,ARE,GBR,USA,URY,UZB,VUT,VEN,VNM,YEM,ZMB,ZWE")
-  #Public key API download
+  
   if(is.null(country)|country=="all"){country <- isos}
+  if(is.null(ages)|ages == "all"){ages <- "00,INF"}
   
   ncountries <- nchar(country)-nchar(gsub(",","",country))+1
   nyears <- nchar(year)-nchar(gsub(",","",year))+1
   
-  url <- paste0("https://api.worldpoverty.io/LB0Bq1Tq3HWjL3F5ycnf2IEqxILfUStr/ages/",country, "/", year, "/[00,INF)/both/1.9?format=binary&include_escape_rates=true")
+  #Public key API download
+  url <- paste0("https://api.worldpoverty.io/LB0Bq1Tq3HWjL3F5ycnf2IEqxILfUStr/ages/",country, "/", year, "/[", ages ,")/", gender, "/" ,poverty_line, "?format=binary&include_escape_rates=true")
   to.read <- file(url, "rb")
   bytes <- readBin(to.read, integer(), n=1000000, size=1, signed=F)
   close.connection(to.read)
@@ -85,3 +88,4 @@ wpc_grab <- function(country="all", year=2020){
   
   return(allout)
 }
+
